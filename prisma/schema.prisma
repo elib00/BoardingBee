@@ -1,0 +1,73 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_MIGRATION_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  type      UserType
+  account   Account?
+  profile   Profile?
+}
+
+model Account {
+  id             Int                    @id @default(autoincrement())
+  userId         Int                    @unique
+  user           User                   @relation(fields: [userId], references: [id])
+  boardingHouses AccountBoardingHouse[] @relation("AccountBoardingHouses")
+  listings       AccountListing[]       @relation("AccountListings")
+}
+
+model Profile {
+  id        Int      @id @default(autoincrement())
+  firstname String
+  lastname  String
+  gender    String
+  birthdate DateTime
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model BoardingHouse {
+  id                   Int                    @id @default(autoincrement())
+  name                 String
+  address              String
+  description          String
+  createdAt            DateTime               @default(now())
+  rating               Int
+  reviews              String[]
+  updatedAt            DateTime               @updatedAt
+  accountBoardingHouse AccountBoardingHouse[]
+  accountListing       AccountListing[]
+}
+
+model AccountBoardingHouse {
+  id              Int           @id @default(autoincrement())
+  accountId       Int
+  boardingHouseId Int
+  account         Account       @relation("AccountBoardingHouses", fields: [accountId], references: [id])
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
+}
+
+model AccountListing {
+  id              Int           @id @default(autoincrement())
+  landlordId      Int
+  boardingHouseId Int
+  account         Account       @relation("AccountListings", fields: [landlordId], references: [id])
+  boardingHouse   BoardingHouse @relation(fields: [boardingHouseId], references: [id])
+}
+
+enum UserType {
+  LANDLORD
+  TENANT
+  ADMIN
+}
